@@ -7,7 +7,7 @@
     width: 26px;
     height: 20px;
     position: absolute;
-    left: 100px;
+    left: 350px;
     top : 100px;
     background: red;
   }
@@ -15,18 +15,20 @@
     width: 34px;
     height: 20px;
     position: absolute;
-    left: 30px;
+    left: 250px;
     top: 100px;
     background: green;
   }
 </style>
+<p>obs: o botao verde tomou 3 litros de cafe, boa sorte</p>
 <script>
   let x = 100;
   let x1 = 0;
   let x2 = 100;
-  let y = 30;
+  let y = 250;
   let velocidade = 50;
   let veloxidade = 2;
+  let y2 = 350;
   
   setInterval(function() {
     x += veloxidade
@@ -37,6 +39,7 @@ if (x <= 0) {
   veloxidade = 2;
 }
    cube.style.left = x + "px";
+    cube.style.top = y2 + "px";
   }, 50);
   
   
