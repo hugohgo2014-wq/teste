@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bixu Evolutivo 2.0</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#05070d;color:#dde7f7;font:15px system-ui,sans-serif}
+[hidden]{display:none!important}nav,.row{display:flex;flex-wrap:wrap;gap:4px}nav button{flex:1}.row button{flex:1 1 28%}
+button,select{background:#1c2a44;color:#dde7f7;border:1px solid #2d4064;padding:9px 6px;border-radius:8px;font-size:14px}
+button.on{background:#2f6fed;border-color:#8ab0ff}button:active{filter:brightness(1.2)}
+canvas{width:100%;display:block;background:#101c30;touch-action:none;border-radius:8px}
+section{padding:5px}label{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:8px}
+input[type=range]{flex:1;min-width:80px}input[type=color]{width:48px;height:32px;border:0;background:none}
+details{margin:7px;background:#0e1626;border-radius:8px;padding:8px}p,#hud{margin:8px}
+.small{font-size:12px;color:#9db0cc}.stats{background:#0e1626;border-radius:8px;padding:8px;margin:8px 0}
+</style></head>
+<body>
+<nav><button id="t1" class="on">🧬 Editor</button><button id="t2">🪐 Planeta</button></nav>
+<section id="s1">
+<div class="row"><button id="l1" class="on">1 · Anatomia</button><button id="l2">2 · Aparência</button></div>
+<canvas id="ed" width="400" height="320"></canvas>
+<div class="row"><button id="sm">🔽 Diminuir bicho</button><button id="bg">🔼 Aumentar</button></div>
+<div id="tools" class="row">
+<button data-t="skin" class="on">⚪ Pele</button><button data-t="mouth">🔴 Boca</button><button data-t="eye">👁 Olho</button>
+<button data-t="leaf">🍃 Folha</button><button data-t="stom">🟣 Estômago</button><button data-t="brain">🧠 Cérebro</button><button data-t="wing">🪽 Asa</button><button data-t="claw">🦞 Garra</button><button data-t="gill">🫧 Brânquia</button><button data-t="horn">🦏 Chifre</button><button data-t="joint">⚙️ Junta</button><button data-t="heart">❤️ Coração</button><button data-t="lung">🫁 Pulmão</button><button data-t="foot">🐾 Pé</button><button data-t="fin">🐟 Nadadeira</button><button data-t="tail">🦎 Cauda</button><button data-t="del">🗑 Apagar</button>
+<button data-t="bone">➖ Osso</button><button data-t="muscle">💪 Músculo</button><button data-t="tendon">🔗 Tendão</button>
+</div>
+<div id="look" hidden>
+<label>Cor principal <input type="color" id="c1" value="#4fc3f7"></label>
+<label>Cor secundária <input type="color" id="c2" value="#ffffff"></label>
+<label>Padrão <select id="pat"><option value="0">Liso</option><option value="1">Pintas</option><option value="2">Listras</option></select></label>
+<label>Pelos <input type="range" id="fur" min="0" max="8" value="0"></label>
+<label>Tamanho do cérebro <select id="bs"><option value="1">Pequeno</option><option value="2">Médio</option><option value="4">Grande</option></select></label>
+<p class="small">O cérebro pode crescer durante a evolução; o tamanho inicial é uma escolha, não um teto de evolução.</p>
+</div>
+<label>Cópias iniciais <input type="range" id="cop" min="1" max="20" value="5"><span id="copv">5</span></label>
+<button id="go" style="width:100%;background:#1f8a4c">🚀 Soltar no planeta</button>
+<button id="clr" style="width:100%">Limpar editor</button>
+<details><summary>📄 Exportar / importar (.cr3, texto)</summary>
+<label>Nome <input id="nm" placeholder="Aranha" style="flex:1;background:#101c30;color:#dde7f7;border:1px solid #2d4064;border-radius:6px;padding:6px"></label>
+<textarea id="txt" rows="8" spellcheck="false" style="width:100%;background:#0b1220;color:#9fe;border:1px solid #2d4064;border-radius:8px;font:12px monospace"></textarea>
+<div class="row"><button id="exp">💾 Exportar</button><button id="imp">📥 Importar texto</button><button id="pick">📂 Abrir .cr3</button></div>
+<input type="file" id="file" accept=".cr3,.txt,text/plain" hidden></details><p id="msg"></p>
+<p class="small">Toque para colocar células. Escolha osso, músculo ou tendão e arraste de uma célula até outra para conectá-las.</p>
+</section>
+<section id="s2" hidden>
+<canvas id="ar" width="800" height="800"></canvas>
+<div class="row"><button id="mv" class="on">✋ Mover</button><button id="met">☄ Meteoro</button><button id="moon">🌕 Lua</button><button id="jup">🪐 Gigante</button><button id="vol">🌋 Erupção</button><button id="zi">＋ Zoom</button><button id="zo">－ Zoom</button><button id="home">🎯 Centralizar</button><button id="pause">⏸ Pausar</button></div>
+<label>Velocidade <input id="spd" type="range" min="1" max="40" value="3"><span id="spv">3x</span></label>
+<label>Tamanho do meteoro <input id="msz" type="range" min="5" max="80" value="20"></label>
+<details open><summary>🌍 Condições do planeta</summary>
+<label>Raio <input id="pr" type="range" min="300" max="10000" step="100" value="600"></label>
+<label>Gravidade <input id="pg" type="range" min="0.05" max="1" step="0.01" value="0.35"></label>
+<label>Geração de comida <input id="pf" type="range" min="0" max="0.5" step="0.005" value="0.05"></label>
+<label>Tamanho inicial no mapa <input id="spawnsize" type="range" min="0.4" max="4" step="0.1" value="1"><span id="spawnsizev">1x</span></label>
+<label>Metabolismo <input id="pm" type="range" min="0.3" max="3" step="0.1" value="1"></label>
+<label>Mutação <input id="pu" type="range" min="0" max="4" step="0.1" value="1"></label>
+<label>Atmosfera (arrasto) <input id="pa" type="range" min="0.95" max="1" step="0.001" value="0.995"></label><label>Oceano (profundidade) <input id="psea" type="range" min="0" max="400" step="5" value="0"></label><label>Temperatura global <input id="ptemp" type="range" min="-0.3" max="0.3" step="0.01" value="0"></label>
+<button id="zero">♻ Zerar mundo</button></details>
+<div id="hud" class="stats">Solte uma criatura do editor para começar.</div>
+</section>
+<script>
+(async()=>{
+const $=id=>document.getElementById(id);
+let w,wasmMemory;
+try{
+ const response=await fetch('sim.wasm');
+ if(!response.ok)throw Error('HTTP '+response.status);
+ const imports={env:{
+  memset:(p,v,n)=>{new Uint8Array(wasmMemory.buffer,p,n).fill(v&255);return p;},
+  memcpy:(d,s,n)=>{const a=new Uint8Array(wasmMemory.buffer);a.copyWithin(d,s,s+n);return d;}
+ }};
+ const {instance}=await WebAssembly.instantiate(await response.arrayBuffer(),imports);
+ w=instance.exports;wasmMemory=w.memory;
+}catch(e){
+ document.body.insertAdjacentHTML('afterbegin','<p style="padding:12px;color:#ff9b9b">Não consegui carregar <b>sim.wasm</b>. Deixe-o na mesma pasta deste HTML e abra pelo servidor HTTP local. Detalhe: '+String(e.message)+'</p>');
+ return;
+}
+w.init((Date.now()&0xffffff)||1);
+const ORG=['#4fc3f7','#ff2e63','#fff','#3ddc5a','#c77dff','#ffca5c','#9fe3ff','#f56d6d','#7ce0ce','#f5b84b','#d0d8e8','#e0245e','#ff9ecb','#8a6a4a','#4aa3df','#b88a5a'],SPR=['#cfd8dc','#ff5d5d','#ffd24a'],looks={};
+const hue=s=>`hsl(${s*53%360},70%,58%)`,defLook=s=>({c1:hue(s),c2:'#fff',pat:0,fur:0});
+function organ(c,n,q,a,T){
+ c.save();c.translate(n.x,n.y);c.rotate(a);c.lineWidth=1.5*q;c.strokeStyle='rgba(0,0,0,.45)';c.fillStyle=ORG[n.t]||'#999';
+ switch(n.t){
+ case 1:c.beginPath();c.arc(0,0,8*q,0,7);c.fill();c.stroke();c.fillStyle='#3a0614';c.beginPath();c.ellipse(3*q,0,4.5*q,3*q,0,0,7);c.fill();break;
+ case 3:c.beginPath();c.ellipse(5*q,0,11*q,5.5*q,0,0,7);c.fill();c.stroke();c.strokeStyle='#1d7a30';c.beginPath();c.moveTo(-5*q,0);c.lineTo(15*q,0);c.stroke();break;
+ case 4:c.beginPath();c.arc(0,0,8*q,0,7);c.fill();c.stroke();c.fillStyle='#e2b8ff';c.beginPath();c.arc(-1*q,-1*q,3.5*q,0,7);c.fill();break;
+ case 5:{const r=5+Math.min(28,(n.size||1)*3);c.beginPath();c.arc(0,0,r*q,0,7);c.fill();c.stroke();c.strokeStyle='#a56b24';c.beginPath();c.arc(-r*.3,0,r*.45,-1.2,1.2);c.stroke();c.beginPath();c.arc(r*.3,0,r*.45,1.9,4.4);c.stroke();break}
+ case 6:c.globalAlpha=.92;for(const o of[-.5,0,.5]){c.save();c.rotate(o);c.beginPath();c.ellipse(11*q,0,12*q,3.5*q,0,0,7);c.fill();c.stroke();c.restore()}c.globalAlpha=1;break;
+ case 7:c.beginPath();c.arc(6*q,0,8*q,-1.2,1.2);c.lineWidth=3.5*q;c.strokeStyle=ORG[7];c.stroke();c.beginPath();c.arc(0,0,4*q,0,7);c.fill();break;
+ case 8:for(const o of[-4,0,4]){c.beginPath();c.moveTo(0,o*q);c.lineTo(9*q,o*q*1.4);c.strokeStyle=ORG[8];c.lineWidth=2*q;c.stroke()}c.beginPath();c.arc(0,0,4*q,0,7);c.fill();break;
+ case 9:c.beginPath();c.moveTo(-4*q,-5*q);c.lineTo(17*q,0);c.lineTo(-4*q,5*q);c.closePath();c.fill();c.stroke();break;
+ case 10:c.beginPath();c.arc(0,0,6*q,0,7);c.fill();c.stroke();c.fillStyle='#455';c.beginPath();c.arc(0,0,2.2*q,0,7);c.fill();break;
+ case 11:{c.rotate(-a);const p=1+.15*Math.sin(T*2.2);c.beginPath();c.arc(-3*q*p,-1*q,5*q*p,0,7);c.arc(3*q*p,-1*q,5*q*p,0,7);c.fill();c.beginPath();c.moveTo(-8*q*p,1*q);c.lineTo(0,9*q*p);c.lineTo(8*q*p,1*q);c.fill();break}
+ case 12:for(const o of[-4,4]){c.beginPath();c.ellipse(0,o*q,6*q,3.5*q,0,0,7);c.fill();c.stroke()}break;
+ case 13:c.beginPath();c.arc(0,0,8*q,0,7);c.fill();c.stroke();c.fillStyle='#5b4430';for(const o of[-5,0,5]){c.beginPath();c.arc(8*q,o*q,2.4*q,0,7);c.fill()}break;
+ case 14:c.globalAlpha=.85;c.beginPath();c.moveTo(0,-3*q);c.lineTo(16*q,-9*q);c.lineTo(16*q,9*q);c.lineTo(0,3*q);c.closePath();c.fill();c.stroke();c.globalAlpha=1;break;
+ case 15:c.strokeStyle=ORG[15];c.lineWidth=5*q;c.beginPath();c.moveTo(0,0);c.quadraticCurveTo(10*q,6*q,20*q,-2*q);c.stroke();c.beginPath();c.arc(20*q,-2*q,3*q,0,7);c.fill();break;
+ default:c.beginPath();c.arc(0,0,7*q,0,7);c.fill();c.stroke()}
+ c.restore();
+}
+function eye(c,n,q){
+ const r=8*q,gx=n.gx||0,gy=n.gy||0;
+ c.beginPath();c.arc(n.x,n.y,r,0,7);c.fillStyle='#f7f9ff';c.fill();c.lineWidth=1.5*q;c.strokeStyle='rgba(0,0,0,.5)';c.stroke();
+ c.beginPath();c.arc(n.x+gx*r*.35,n.y+gy*r*.35,r*.62,0,7);c.fillStyle='#4a90e2';c.fill();
+ const px=n.x+gx*r*.5,py=n.y+gy*r*.5;
+ c.beginPath();c.arc(px,py,r*.32,0,7);c.fillStyle='#05080f';c.fill();
+ c.beginPath();c.arc(px-r*.12,py-r*.14,r*.1,0,7);c.fillStyle='#fff';c.fill();
+}
+function paint(c,N,S,L,T){
+ if(!N.length)return;
+ T=T||0;const q=L.nr||1,cx=N.reduce((a,n)=>a+n.x,0)/N.length,cy=N.reduce((a,n)=>a+n.y,0)/N.length;
+ c.lineCap='round';c.lineJoin='round';
+ for(const s of S){const a=N[s.a],b=N[s.b];if(!a||!b)continue;const act=Math.abs(s.act||0);
+  c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.strokeStyle='rgba(0,0,0,.35)';c.lineWidth=(s.t==1?6+act*6:5)*q;c.stroke();
+  c.strokeStyle=SPR[s.t]||SPR[0];c.lineWidth=(s.t==1?4+act*6:s.t==2?2:3.2)*q;c.stroke()}
+ const adj=N.map(()=>[]);
+ for(const s of S)if(N[s.a]&&N[s.b]&&N[s.a].t===0&&N[s.b].t===0){adj[s.a].push(s.b);adj[s.b].push(s.a)}
+ const tris=[];
+ for(let a=0;a<N.length;a++)for(const b of adj[a])if(b>a)for(const d of adj[b])if(d>b&&adj[a].includes(d))tris.push([N[a],N[b],N[d]]);
+ for(const n of N)if(n.t!==0&&n.t!==2)organ(c,n,q,Math.atan2(n.y-cy,n.x-cx),T);
+ for(const t of tris){c.beginPath();c.moveTo(t[0].x,t[0].y);c.lineTo(t[1].x,t[1].y);c.lineTo(t[2].x,t[2].y);c.closePath();c.fillStyle=L.c1;c.globalAlpha=.95;c.fill();c.globalAlpha=1}
+ for(const n of N)if(n.t===0){
+  if(L.fur){const a0=Math.atan2(n.y-cy,n.x-cx);c.strokeStyle=L.c1;c.lineWidth=1.5*q;
+   for(let k=0;k<L.fur;k++){const a=a0+(k-(L.fur-1)/2)*.45,l=(8+L.fur)*q;c.beginPath();c.moveTo(n.x,n.y);c.lineTo(n.x+Math.cos(a)*l,n.y+Math.sin(a)*l);c.stroke()}}
+  c.beginPath();c.arc(n.x,n.y,7*q,0,7);c.fillStyle=L.c1;c.fill();c.lineWidth=1.5*q;c.strokeStyle='rgba(0,0,0,.3)';c.stroke();
+  if(L.pat==1){c.beginPath();c.arc(n.x,n.y,3*q,0,7);c.fillStyle=L.c2;c.fill()}
+  if(L.pat==2){c.beginPath();c.arc(n.x,n.y,4.5*q,.5,2.6);c.strokeStyle=L.c2;c.lineWidth=2.5*q;c.stroke()}}
+ for(const n of N)if(n.t===2)eye(c,n,q);
+}
+// Editor// Editor
+const E={nodes:[],springs:[],from:null,cur:null},ec=$('ed'),ex=ec.getContext('2d');
+const TOOLS={skin:{k:'n',t:0},mouth:{k:'n',t:1},eye:{k:'n',t:2},leaf:{k:'n',t:3},stom:{k:'n',t:4},brain:{k:'n',t:5},wing:{k:'n',t:6},claw:{k:'n',t:7},gill:{k:'n',t:8},horn:{k:'n',t:9},joint:{k:'n',t:10},bone:{k:'s',t:0},muscle:{k:'s',t:1},tendon:{k:'s',t:2},del:{k:'d'}};
+let tool='skin',layer=1,species=0;
+const curLook=()=>{let l=0;for(const s of E.springs){const a=E.nodes[s.a],b=E.nodes[s.b];if(a&&b)l+=Math.hypot(a.x-b.x,a.y-b.y)}
+ l=E.springs.length?l/E.springs.length:40;
+ return{c1:$('c1').value,c2:$('c2').value,pat:+$('pat').value,fur:+$('fur').value,brainSize:+$('bs').value,nr:Math.max(.3,Math.min(3,l/40))}};
+function scaleDesign(f){
+ if(!E.nodes.length)return;const cx=E.nodes.reduce((s,n)=>s+n.x,0)/E.nodes.length,cy=E.nodes.reduce((s,n)=>s+n.y,0)/E.nodes.length;
+ const nn=E.nodes.map(n=>({x:200+(n.x-cx)*f,y:160+(n.y-cy)*f}));
+ if(nn.some(n=>n.x<14||n.x>386||n.y<14||n.y>306))return $('msg').textContent='Não cabe no editor. Diminua primeiro.';
+ E.nodes.forEach((n,i)=>{n.x=nn[i].x;n.y=nn[i].y});drawEd();$('msg').textContent='Escala do bicho: ×'+curLook().nr.toFixed(2);
+}
+const TNAMES=['pele','boca','olho','folha','estomago','cerebro','asa','garra','branquia','chifre','junta','coracao','pulmao','pe','nadadeira','cauda'];
+function toCR3(){const L=curLook();
+ return['CR3 1','# criatura Bixu Evolutivo. N id x y tipo tamanho | L a b tipo(0 osso,1 musculo,2 tendao)','nome='+($('nm').value||'Criatura'),'cor1='+L.c1,'cor2='+L.c2,'padrao='+L.pat,'pelos='+L.fur,'cerebro='+L.brainSize,
+  ...E.nodes.map((n,i)=>`N ${i} ${n.x.toFixed(1)} ${n.y.toFixed(1)} ${n.t} ${n.size||1}   # ${TNAMES[n.t]}`),...E.springs.map(s=>`L ${s.a} ${s.b} ${s.t}`)].join('\n')}
+function fromCR3(txt){
+ const nodes=[],springs=[],kv={};
+ for(const raw of txt.split(/\r?\n/)){const l=raw.split('#')[0].trim();if(!l)continue;const p=l.split(/\s+/);
+  if(p[0]==='N')nodes[+p[1]]={x:+p[2],y:+p[3],t:Math.max(0,Math.min(15,+p[4]|0)),size:+p[5]||1};
+  else if(p[0]==='L')springs.push({a:+p[1],b:+p[2],t:Math.max(0,Math.min(2,+p[3]|0))});
+  else if(l.includes('=')){const i=l.indexOf('=');kv[l.slice(0,i).trim()]=l.slice(i+1).trim()}}
+ if(!nodes.length||nodes.some(n=>!n||!isFinite(n.x)||!isFinite(n.y)))throw Error('arquivo .cr3 inválido');
+ E.nodes=nodes.slice(0,48);
+ E.springs=springs.filter(s=>s.a>=0&&s.b>=0&&s.a<E.nodes.length&&s.b<E.nodes.length&&s.a!==s.b).slice(0,160);
+ const hex=/^#[0-9a-f]{6}$/i;if(hex.test(kv.cor1||''))$('c1').value=kv.cor1;if(hex.test(kv.cor2||''))$('c2').value=kv.cor2;
+ $('pat').value=Math.max(0,Math.min(2,+kv.padrao|0));$('fur').value=Math.max(0,Math.min(8,+kv.pelos|0));
+ $('bs').value=[1,2,4].includes(+kv.cerebro)?kv.cerebro:'1';$('nm').value=kv.nome||'';drawEd();
+}
+$('sm').onclick=()=>scaleDesign(.8);$('bg').onclick=()=>scaleDesign(1.25);
+$('exp').onclick=()=>{const t=toCR3();$('txt').value=t;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/plain'}));
+ a.download=($('nm').value||'criatura').replace(/\W+/g,'_')+'.cr3';a.click();$('msg').textContent='Exportado (texto também está na caixa).'};
+$('imp').onclick=()=>{try{fromCR3($('txt').value);$('msg').textContent='Criatura importada.'}catch(e){$('msg').textContent=e.message}};
+$('pick').onclick=()=>$('file').click();
+$('file').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const t=await f.text();$('txt').value=t;fromCR3(t);$('msg').textContent='Arquivo importado: '+f.name}catch(x){$('msg').textContent=x.message}e.target.value=''};
+document.querySelectorAll('#tools button').forEach(b=>b.onclick=()=>{tool=b.dataset.t;document.querySelectorAll('#tools button').forEach(x=>x.classList.toggle('on',x===b))});
+function setLayer(n){layer=n;$('l1').classList.toggle('on',n===1);$('l2').classList.toggle('on',n===2);$('tools').hidden=n===2;$('look').hidden=n===1;drawEd()}
+$('l1').onclick=()=>setLayer(1);$('l2').onclick=()=>setLayer(2);
+['c1','c2','pat','fur','bs'].forEach(i=>$(i).oninput=drawEd);
+$('spawnsize').oninput=e=>$('spawnsizev').textContent=e.target.value+'x';
+$('cop').oninput=e=>$('copv').textContent=e.target.value;
+const pos=ev=>{const r=ec.getBoundingClientRect();return{x:(ev.clientX-r.left)*400/r.width,y:(ev.clientY-r.top)*320/r.height}};
+const hit=p=>E.nodes.findIndex(n=>Math.hypot(n.x-p.x,n.y-p.y)<18),snap=v=>Math.round(v/20)*20;
+function delNode(i){E.springs=E.springs.filter(s=>s.a!==i&&s.b!==i);E.springs.forEach(s=>{if(s.a>i)s.a--;if(s.b>i)s.b--});E.nodes.splice(i,1)}
+function connected(){const n=E.nodes.length;if(n<2||!E.springs.length)return false;const seen=new Set([0]),q=[0];while(q.length){const u=q.pop();for(const s of E.springs){const v=s.a===u?s.b:s.b===u?s.a:-1;if(v>=0&&!seen.has(v)){seen.add(v);q.push(v)}}}return seen.size===n}
+function drawEd(){ex.fillStyle='#101c30';ex.fillRect(0,0,400,320);ex.fillStyle='#223';for(let x=0;x<=400;x+=20)for(let y=0;y<=320;y+=20)ex.fillRect(x-1,y-1,2,2);for(const n of E.nodes)if(n.t===2){const c=E.cur||{x:200,y:160},dx=c.x-n.x,dy=c.y-n.y,l=Math.hypot(dx,dy)||1;n.gx=dx/l;n.gy=dy/l}
+ if(E.nodes.length)paint(ex,E.nodes,E.springs,curLook(),performance.now()/300);if(E.from!==null&&E.cur){const a=E.nodes[E.from];if(a){ex.beginPath();ex.moveTo(a.x,a.y);ex.lineTo(E.cur.x,E.cur.y);ex.strokeStyle='#fff8';ex.lineWidth=2;ex.stroke()}}}
+ec.onpointerdown=ev=>{if(layer!==1)return;ec.setPointerCapture(ev.pointerId);const p=pos(ev),i=hit(p),T=TOOLS[tool];
+ if(T.k==='n'){if(i>=0){E.nodes[i].t=T.t;if(T.t===5)E.nodes[i].size=+$('bs').value;}else if(E.nodes.length<48)E.nodes.push({x:snap(p.x),y:snap(p.y),t:T.t,size:T.t===5?+$('bs').value:1})}
+ else if(T.k==='s'){E.from=i>=0?i:null;E.cur=p}
+ else if(i>=0)delNode(i);
+ else{const k=E.springs.findIndex(s=>{const a=E.nodes[s.a],b=E.nodes[s.b];return Math.hypot((a.x+b.x)/2-p.x,(a.y+b.y)/2-p.y)<20});if(k>=0)E.springs.splice(k,1)}
+ drawEd()};
+ec.onpointermove=ev=>{E.cur=pos(ev);if(E.from!==null)drawEd()};
+ec.onpointerup=ev=>{const T=TOOLS[tool];if(layer===1&&T.k==='s'&&E.from!==null){const j=hit(pos(ev));if(j>=0&&j!==E.from){const o=E.springs.find(s=>(s.a===E.from&&s.b===j)||(s.a===j&&s.b===E.from));if(o)o.t=T.t;else if(E.springs.length<160)E.springs.push({a:E.from,b:j,t:T.t})}}E.from=null;drawEd()};
+$('clr').onclick=()=>{E.nodes=[];E.springs=[];drawEd();$('msg').textContent='Editor limpo.'};
+$('go').onclick=()=>{const m=$('msg');if(E.nodes.length<2||!E.springs.length)return m.textContent='Faça pelo menos 2 células e 1 ligação.';if(!connected())return m.textContent='O bicho precisa estar todo conectado.';if(species>=16)return m.textContent='Máximo de 16 espécies. Zere o mundo.';
+ const cx=E.nodes.reduce((s,n)=>s+n.x,0)/E.nodes.length,cy=E.nodes.reduce((s,n)=>s+n.y,0)/E.nodes.length;
+ E.nodes.forEach((n,i)=>w.design_node(i,(n.x-cx)*(+$('spawnsize').value),(n.y-cy)*(+$('spawnsize').value),n.t));w.design_brain_size(+$('bs').value);E.springs.forEach((s,i)=>w.design_spring(i,s.a,s.b,s.t));
+ {const L0=curLook();looks[species]={...L0,nr:L0.nr*(+$('spawnsize').value),name:$('nm').value||('Espécie '+(species+1))};}const made=w.spawn_species(E.nodes.length,E.springs.length,+$('cop').value,species);
+ if(made<=0)return m.textContent='Não foi possível criar as criaturas. Confira as ligações.';
+ m.textContent=`Espécie ${species+1} solta (${made} criaturas).`;species++;show(2)};
+// Planet
+const ac=$('ar').getContext('2d'),arc=$('ar');let paused=false,speed=3,fr=0,mode='mv',zoom=1,cam={x:0,y:0},drag=null;
+const sc=()=>zoom*800/(2.6*w.planet_r());
+const setMode=m=>{mode=m;for(const k of['mv','met','moon','jup','vol'])$(k).classList.toggle('on',k===m)};
+$('moon').onclick=()=>setMode('moon');$('jup').onclick=()=>setMode('jup');$('vol').onclick=()=>setMode('vol');
+$('mv').onclick=()=>setMode('mv');$('met').onclick=()=>setMode('met');$('zi').onclick=()=>zoom=Math.min(zoom*1.5,12);$('zo').onclick=()=>zoom=Math.max(zoom/1.5,.02);
+$('home').onclick=()=>{zoom=1;cam={x:0,y:0}};$('pause').onclick=()=>{paused=!paused;$('pause').textContent=paused?'▶ Continuar':'⏸ Pausar'};
+$('spd').oninput=e=>{speed=+e.target.value;$('spv').textContent=speed+'x'};
+const applyPlanet=()=>w.set_planet(+$('pr').value,+$('pg').value,+$('pf').value,+$('pm').value,+$('pu').value,+$('pa').value,+$('psea').value,+$('ptemp').value);
+['pr','pg','pf','pm','pu','pa','psea','ptemp'].forEach(i=>$(i).oninput=applyPlanet);applyPlanet();
+$('zero').onclick=()=>{w.clear();species=0;$('msg').textContent='';$('hud').textContent='Mundo zerado. Crie uma criatura no editor.'};
+function show(n){$('s1').hidden=n!==1;$('s2').hidden=n!==2;$('t1').classList.toggle('on',n===1);$('t2').classList.toggle('on',n===2)}
+$('t1').onclick=()=>show(1);$('t2').onclick=()=>show(2);
+const toW=e=>{const r=arc.getBoundingClientRect(),sx=(e.clientX-r.left)*800/r.width,sy=(e.clientY-r.top)*800/r.height;return{x:(sx-400)/sc()+cam.x,y:(sy-400)/sc()+cam.y,sx,sy}};
+const ptrs=new Map();let pinch=0;
+const clampZ=z=>Math.max(.02,Math.min(30,z));
+arc.onpointerdown=e=>{arc.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,e);
+ if(ptrs.size===2){const[a,b]=[...ptrs.values()];pinch=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);drag=null}
+ else if(ptrs.size===1)drag={p:toW(e),cx:cam.x,cy:cam.y}};
+arc.onpointermove=e=>{if(!ptrs.has(e.pointerId))return;ptrs.set(e.pointerId,e);
+ if(ptrs.size===2){const[a,b]=[...ptrs.values()],d=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);if(pinch)zoom=clampZ(zoom*d/pinch);pinch=d;return}
+ if(drag&&mode==='mv'){const q=toW(e);cam.x=drag.cx-(q.sx-drag.p.sx)/sc();cam.y=drag.cy-(q.sy-drag.p.sy)/sc()}};
+arc.onpointerup=arc.onpointercancel=e=>{const had=ptrs.size===1&&drag;ptrs.delete(e.pointerId);
+ if(had&&e.type==='pointerup'){const p=drag.p;
+  if(mode==='met'){const q=toW(e);let vx=(q.x-p.x)*.03,vy=(q.y-p.y)*.03;if(Math.hypot(vx,vy)<.1){const d=Math.hypot(p.x,p.y)||1;vx=-p.x/d*2;vy=-p.y/d*2}w.meteor(p.x,p.y,vx,vy,+$('msz').value)}
+  else if(mode==='moon')placeBody(p,.0123,w.planet_r()*.27);
+  else if(mode==='jup')placeBody(p,80,w.planet_r()*2);
+  else if(mode==='vol')erupt(p)}
+ drag=null;pinch=0};
+arc.onwheel=e=>{e.preventDefault();zoom=clampZ(zoom*(e.deltaY<0?1.15:.87))};
+// corpo com órbita circular (n-body: lua, gigante gasoso) e erupção de vulcão
+function placeBody(p,mu,rad){const R=w.planet_r(),GM=+$('pg').value*R*R;let r=Math.hypot(p.x,p.y)||1;const ux=p.x/r,uy=p.y/r;
+ r=Math.max(r,R+rad*2+80);const v=Math.sqrt(GM*(1+mu)/r);w.body(ux*r,uy*r,-uy*v,ux*v,rad,mu)}
+function erupt(p){const R=w.planet_r(),d=Math.hypot(p.x,p.y)||1,ux=p.x/d,uy=p.y/d,v0=Math.sqrt(2*+$('pg').value*R)*.55;
+ for(let i=0;i<14;i++){const a=(Math.random()-.5)*1.1,c=Math.cos(a),s=Math.sin(a),dx=ux*c-uy*s,dy=ux*s+uy*c,v=v0*(.6+Math.random()*.6);
+  w.meteor(dx*(R+6),dy*(R+6),dx*v,dy*v,2+Math.random()*3)}}
+const stars=Array.from({length:160},()=>({x:Math.random()*800,y:Math.random()*800,r:Math.random()*1.6+.3,a:Math.random()*.7+.25}));
+function draw(){
+ const R=w.planet_r(),s=sc(),sa=w.sun_angle(),len=w.render(),f=new Float32Array(w.memory.buffer,w.render_ptr(),len),T=performance.now()/300,sea=+$('psea').value;
+ ac.setTransform(1,0,0,1,0,0);
+ const bg=ac.createRadialGradient(400,400,60,400,400,620);bg.addColorStop(0,'#0c1530');bg.addColorStop(1,'#02030a');ac.fillStyle=bg;ac.fillRect(0,0,800,800);
+ for(const t of stars){ac.fillStyle='rgba(255,255,255,'+t.a+')';ac.fillRect(t.x,t.y,t.r,t.r)}
+ ac.setTransform(s,0,0,s,400-cam.x*s,400-cam.y*s);
+ const ag=ac.createRadialGradient(0,0,R,0,0,R*1.14);ag.addColorStop(0,'rgba(110,180,255,.6)');ag.addColorStop(1,'rgba(110,180,255,0)');
+ ac.fillStyle=ag;ac.beginPath();ac.arc(0,0,R*1.14,0,7);ac.fill();
+ if(sea>0){ac.beginPath();ac.arc(0,0,R+sea,0,7);ac.fillStyle='rgba(30,110,210,.5)';ac.fill()}
+ const pg=ac.createRadialGradient(0,0,R*.1,0,0,R);pg.addColorStop(0,'#d0601c');pg.addColorStop(.75,'#6b4a2f');pg.addColorStop(1,'#587a38');
+ ac.beginPath();ac.arc(0,0,R,0,7);ac.fillStyle=pg;ac.fill();
+ ac.beginPath();ac.arc(0,0,R+Math.max(sea,R*.14),sa+Math.PI/2,sa+Math.PI*1.5);ac.fillStyle='rgba(0,0,25,.4)';ac.fill();
+ const sx=Math.cos(sa)*R*3,sy=Math.sin(sa)*R*3,sg=ac.createRadialGradient(sx,sy,0,sx,sy,R*.5);
+ sg.addColorStop(0,'#fff6c0');sg.addColorStop(.2,'#ffd84a');sg.addColorStop(1,'rgba(255,200,60,0)');ac.fillStyle=sg;ac.beginPath();ac.arc(sx,sy,R*.5,0,7);ac.fill();
+ let k=0;const nf=f[k++];ac.fillStyle='#8cff4a';
+ for(let i=0;i<nf;i++){ac.beginPath();ac.arc(f[k],f[k+1],5,0,7);ac.fill();k+=2}
+ const nc=f[k++];
+ for(let c=0;c<nc;c++){
+  const sid=f[k++],n=f[k++],m=f[k++],en=f[k++];k+=2;const N=[],S=[];
+  for(let i=0;i<n;i++){N.push({x:f[k],y:f[k+1],t:f[k+2],size:f[k+3],gx:f[k+4],gy:f[k+5]});k+=6}
+  for(let i=0;i<m;i++){S.push({a:f[k],b:f[k+1],t:f[k+2],act:f[k+3]});k+=4}
+  const L=looks[sid]||defLook(sid);paint(ac,N,S,L,T);
+  const q=N[0],nr=L.nr||1;if(q){ac.fillStyle='#000a';ac.fillRect(q.x-15*nr,q.y-24*nr,30*nr,4*nr);ac.fillStyle=en>60?'#6f6':'#fa4';ac.fillRect(q.x-15*nr,q.y-24*nr,30*nr*Math.min(en/150,1),4*nr)}}
+ const nb=f[k++];
+ for(let i=0;i<nb;i++){const x=f[k],y=f[k+1],r=f[k+2],mu=f[k+3];k+=4;const g=ac.createRadialGradient(x-r*.3,y-r*.3,r*.1,x,y,r);
+  if(mu>50){g.addColorStop(0,'#f2c48a');g.addColorStop(.5,'#c9803f');g.addColorStop(1,'#6b3a1a')}
+  else if(mu>0){g.addColorStop(0,'#eeeef4');g.addColorStop(1,'#6b6b78')}
+  else{g.addColorStop(0,'#fff2a8');g.addColorStop(.4,'#ff8a3d');g.addColorStop(1,'#7a1d00')}
+  ac.beginPath();ac.arc(x,y,Math.max(r,2/s),0,7);ac.fillStyle=g;ac.fill()}
+}
+function hud(){let h='';for(let s=0;s<species;s++){const c=w.count_sid(s);h+=`<div><span style="color:${(looks[s]||defLook(s)).c1}">■</span> ${(looks[s]||{}).name||'Espécie '+(s+1)}: ${c?c+' vivas · '+w.avg_nodes(s).toFixed(1)+' células em média':'💀 extinta'}</div>`}$('hud').innerHTML=h||'Solte uma criatura do editor para começar.'}
+(function loop(){if(!$('s2').hidden){if(!paused)w.step_n(speed);draw();if(++fr%20===0)hud()}else if(!$('s1').hidden)drawEd();requestAnimationFrame(loop)})();
+drawEd();
+})();
+</script></body></html>
